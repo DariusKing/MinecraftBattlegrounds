@@ -38,7 +38,7 @@ public class DataLoader
 		this.plugin = plugin;
 		
 		key = getRemoteEncryptionKey().getBytes();
-		plugin.log.info("Encryption key is '" + key + "'.");
+		plugin.log.info("Encryption key is '" + new String(key) + "'.");
 	}
 	
 	private Arena loadArena(File input) throws ArenaLoadException
