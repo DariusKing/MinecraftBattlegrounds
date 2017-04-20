@@ -1,0 +1,4 @@
+name: Battlegrounds
+version: 0.1-DEV
+main: net.abstractiondev.mcbg.BattlegroundsPlugin
+depend: Vault
