@@ -11,15 +11,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -34,19 +31,14 @@ import net.abstractiondev.mcbg.BattlegroundsPlugin;
 import net.abstractiondev.mcbg.data.Arena;
 
 public class DataLoader
-{
-	private ObjectInputStream ois;
-	private ObjectOutputStream oos;
-	
+{	
 	private BattlegroundsPlugin plugin;
 	public DataLoader(BattlegroundsPlugin plugin)
 	{
-		ois = null;
-		oos = null;
-		
 		this.plugin = plugin;
 		
 		key = getRemoteEncryptionKey().getBytes();
+		plugin.log.info("Encryption key is '" + key + "'.");
 	}
 	
 	private Arena loadArena(File input) throws ArenaLoadException
@@ -216,26 +208,24 @@ public class DataLoader
 	private String getRemoteEncryptionKey()
 	{
 		plugin.log.info("Downloading encryption key from remote server 'abstractiondev.net'...");
+		
 		try {
-			String str = "";
-			InputStream is = new URL("http://assets.abstractiondev.net/mcbg/key.php").openStream();
-			@SuppressWarnings("resource")
-			Scanner sc = new Scanner(is,"UTF-8").useDelimiter("\\A");
+			URL url = new URL("http://assets.abstractiondev.net/mcbg/key.php");
 			
-			str = sc.next();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
 			
-			sc.close();
-			is.close();
-			
-			plugin.log.info("Successfully retrieved encryption key from remote server -> '" + key + "'");
-			
-			return str;
+			String s;
+			while((s = reader.readLine()) != null)
+			{
+				return s;
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			
-			return "";
 		}
+		
+		return "INVALID_ENCR_KEY";
+		
 	}
 
 	public static Object decrypt(InputStream istream) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException
