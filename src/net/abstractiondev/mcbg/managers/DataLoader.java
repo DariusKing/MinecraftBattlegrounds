@@ -1,17 +1,15 @@
 package net.abstractiondev.mcbg.managers;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
@@ -29,6 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import net.abstractiondev.mcbg.BattlegroundsPlugin;
 import net.abstractiondev.mcbg.data.Arena;
+import net.abstractiondev.mcbg.data.BattlegroundsConfig;
 
 public class DataLoader
 {	
@@ -37,8 +36,7 @@ public class DataLoader
 	{
 		this.plugin = plugin;
 		
-		key = getRemoteEncryptionKey().getBytes();
-		plugin.log.info("Encryption key is '" + new String(key) + "'.");
+		key = "MCBG_ENCRYPT_KEY".getBytes();
 	}
 	
 	private Arena loadArena(File input) throws ArenaLoadException
@@ -83,7 +81,7 @@ public class DataLoader
 		{
 			f = new File(plugin.getDataFolder() + File.separator + "arenas" + File.separator + arena.identifier.toLowerCase() + ".bga");
 			try {
-				plugin.log.info("Saving arena to file '" + f.getAbsolutePath() + "'.");
+				plugin.log.info("[Battlegrounds] Saving arena to file '" + f.getAbsolutePath() + "'.");
 				saveArena(arena, f);
 			} catch (ArenaSaveException e) {
 				// TODO Auto-generated catch block
@@ -91,9 +89,56 @@ public class DataLoader
 			}
 		}
 	}
+	public void loadConfiguration()
+	{
+		try {
+			try {
+				plugin.config = ((BattlegroundsConfig) decrypt(new FileInputStream(new File(plugin.getDataFolder() + File.separator + "config.bgc"))));
+			}
+			catch(FileNotFoundException e)
+			{
+				try {
+					(new File(plugin.getDataFolder() + File.separator + "config.bgc")).createNewFile();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				plugin.config = new BattlegroundsConfig();
+				
+				saveConfiguration();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public boolean saveConfiguration()
+	{
+		try
+		{
+			try {
+				encrypt(plugin.config,new FileOutputStream(new File(plugin.getDataFolder() + File.separator + "config.bgc")));
+			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return true;
+		}
+		catch(IOException e)
+		{
+			return false;
+		}
+	}
 	public boolean loadArenas()
 	{
-		plugin.log.info("Loading Battlegrounds Arenas...");
+		plugin.log.info("[Battlegrounds] Loading Battlegrounds Arenas...");
 		
 		Path path = Paths.get(plugin.getDataFolder().getAbsolutePath(),"arenas");
 		if(path.toFile().exists())
@@ -107,7 +152,7 @@ public class DataLoader
 				{
 					if(f.isFile())
 					{
-						plugin.log.info("Loading arena from file '" + f.getAbsolutePath() + "'.");
+						//plugin.log.info("[Battlegrounds] Loading arena from file '" + f.getAbsolutePath() + "'.");
 						
 						try {
 							arena = loadArena(f);
@@ -115,34 +160,34 @@ public class DataLoader
 							if(arena != null)
 							{
 								plugin.arenas.add(arena);
-								plugin.log.info("Loaded arena from file '" + f.getAbsolutePath() + "'.");
+								//plugin.log.info("[Battlegrounds] Loaded arena from file '" + f.getAbsolutePath() + "'.");
 							}
 							else
 							{
-								plugin.log.info("Failed to load arena from file '" + f.getAbsolutePath() + "'.");
+								plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "'.");
 							}
 						} catch (ArenaLoadException e) {
 							// TODO Auto-generated catch block
-							plugin.log.info("Failed to load arena from file '" + f.getAbsolutePath() + "'.");
+							plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "'.");
 						}
 					}
 					
 					plugin.log.info(f.getAbsolutePath());
 				}
 
-				plugin.log.info("Loaded " + files.size() + " arenas from file.");
+				plugin.log.info("[Battlegrounds] Loaded " + files.size() + " arenas from file.");
 				
 				return true;
 			}
 			else
 			{
-				plugin.log.info("No dynamic arenas found in directory.");
+				plugin.log.info("[Battlegrounds] No dynamic arenas found in directory.");
 				return true;
 			}
 		}
 		else
 		{
-			plugin.log.info("Arenas directory was not found in installation path.");
+			plugin.log.info("[Battlegrounds] Arenas directory was not found in installation path.");
 			return false;
 		}
 	}
@@ -205,29 +250,6 @@ public class DataLoader
 	    }
 	}
 
-	private String getRemoteEncryptionKey()
-	{
-		plugin.log.info("Downloading encryption key from remote server 'abstractiondev.net'...");
-		
-		try {
-			URL url = new URL("http://assets.abstractiondev.net/mcbg/key.php");
-			
-			BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-			
-			String s;
-			while((s = reader.readLine()) != null)
-			{
-				return s;
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return "INVALID_ENCR_KEY";
-		
-	}
-
 	public static Object decrypt(InputStream istream) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException
 	{
 	    SecretKeySpec sks = new SecretKeySpec(key, transformation);
@@ -251,10 +273,11 @@ public class DataLoader
 		}
 	}
 
+	
 	class ArenaLoadException extends IOException
 	{
 		private static final long serialVersionUID = 634096980659398156L;
-
+	
 		ArenaLoadException(Exception e)
 		{
 			super(e.getMessage());
@@ -263,11 +286,21 @@ public class DataLoader
 	class ArenaSaveException extends IOException
 	{
 		private static final long serialVersionUID = -5846865168953630094L;
-
+	
 		ArenaSaveException(Exception e)
 		{
 			super(e.getMessage());
 		}
 	}
+	class ConfigurationLoadException extends IOException
+	{
+		private static final long serialVersionUID = -5711328783869540335L;
+	
+		ConfigurationLoadException(Exception e)
+		{
+			super(e.getMessage());
+		}
+	}
 }
+
 
