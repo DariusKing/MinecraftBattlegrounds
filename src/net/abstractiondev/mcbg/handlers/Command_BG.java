@@ -300,7 +300,7 @@ public class Command_BG implements CommandExecutor
 										
 										Arena match = null;
 										
-										// Gets the first arena
+										// Gets the first arena 
 										for(Arena a : plugin.arenas)
 										{
 											if(!a.isActive() && a.getPlayers().size() < 25)
