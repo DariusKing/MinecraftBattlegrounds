@@ -58,6 +58,7 @@ public class BattlegroundsEvents implements Listener {
 		if(match != null)
 		{
 			victim.sendMessage(ChatColor.RED + "You cannot break blocks whilst in a match.");
+			event.setCancelled(true);
 		}
 	}
 }
