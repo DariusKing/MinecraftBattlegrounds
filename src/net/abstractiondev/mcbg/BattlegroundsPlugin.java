@@ -114,15 +114,19 @@ public class BattlegroundsPlugin extends JavaPlugin
 							// Remove inactive players
 							for(Player pl : a.getPlayers())
 								if(pl != null && !pl.isOnline())
+								{
 									a.getPlayers().remove(pl);
+									
+									for(Player player : a.getPlayers())
+									{
+										player.sendMessage(ChatColor.DARK_PURPLE + pl.getName() + " has been removed from the arena.");
+									}
+								}
 							
 							// Check match condition
-							if(a.getPlayers().size() <= 0)
+							if(a.getPlayers().size() == 0) // TODO: Change to more players
 							{
-								for(Player pl : a.getPlayers())
-								{
-									Bukkit.broadcastMessage(ChatColor.DARK_PURPLE + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
-								}
+								for(Player pl : a .getPlayers()) Bukkit.broadcastMessage(ChatColor.DARK_PURPLE + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
 								
 								a.setActive(false);
 								a.setRound(1);
@@ -139,10 +143,10 @@ public class BattlegroundsPlugin extends JavaPlugin
 									{
 										for(int i = 0; i <= 50; i++) pl.sendMessage(" "); // Clear chat
 										pl.sendMessage(ChatColor.DARK_PURPLE + "Welcome to Battlegrounds!");
-										pl.sendMessage(ChatColor.DARK_GRAY + "Your goal is to " + ChatColor.GRAY + "survive by killing other players in the arena" + ChatColor.DARK_GRAY + ".");
-										pl.sendMessage(ChatColor.DARK_GRAY + "Increase your power with " + ChatColor.GRAY + "weapons, armor, and power-ups " + ChatColor.DARK_GRAY + "found in crates around the arena.");
-										pl.sendMessage(ChatColor.DARK_GRAY + "The world border shrinks as you play! " + ChatColor.GRAY + "Stay away from the burning ring or you will lose health very quickly" + ChatColor.DARK_GRAY + ".");
-										pl.sendMessage(ChatColor.DARK_GRAY + "This game is a sudden death style game! That means " + ChatColor.GRAY + "you only have a single life" + ChatColor.DARK_GRAY + ".");
+										pl.sendMessage(ChatColor.GRAY + "Your goal is to " + ChatColor.GRAY + "survive by killing other players in the arena" + ChatColor.GRAY + ".");
+										pl.sendMessage(ChatColor.GRAY + "Collect " + ChatColor.GRAY + "weapons, armor, and power-ups " + ChatColor.GRAY + "found in crates.");
+										pl.sendMessage(ChatColor.GRAY + "The world border shrinks as you play! " + ChatColor.GRAY + "Stay away from the burning ring or you will lose health" + ChatColor.GRAY + ".");
+										pl.sendMessage(ChatColor.GRAY + "This game is a sudden death style game! That means " + ChatColor.GRAY + "you only have a single life" + ChatColor.GRAY + ".");
 									}
 									
 									try {
@@ -154,6 +158,11 @@ public class BattlegroundsPlugin extends JavaPlugin
 									a.setActive(true);
 									a.setRound(1);
 									a.setRoundTimer(300);
+									
+									for(Player p : a.getPlayers())
+									{
+										p.sendMessage(ChatColor.GRAY + "Round " + a.getRound() + " - " + ChatColor.YELLOW + a.getPlayers().size() + " players remaining.");
+									}
 								}
 								
 								continue;
@@ -194,6 +203,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 									case 2: // normal circle
 										//centerPoint = perfectCenter;
 										a.setRoundTimer(180);
+										
 										break;
 									case 3:
 									case 4: // 2/3 size circle
@@ -209,6 +219,11 @@ public class BattlegroundsPlugin extends JavaPlugin
 										//centerPoint = perfectCenter;
 										a.setRoundTimer(60);
 										break;
+									}
+									
+									for(Player p : a.getPlayers())
+									{
+										p.sendMessage(ChatColor.GRAY + "Round " + a.getRound() + " - " + ChatColor.YELLOW + a.getPlayers().size() + " players remaining.");
 									}
 								}
 								
@@ -231,7 +246,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 								// Warnings
 								if(a.getRound() % 2 == 0)
 								{
-									if(a.getRoundTimer() % 30 == 0)
+									if(a.getRoundTimer() % 15 == 0)
 									{
 										for(Player p : a.getPlayers())
 										{
@@ -241,7 +256,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 								}
 								else
 								{
-									if(a.getRoundTimer() % 15 == 0)
+									if(a.getRoundTimer() % 60 == 0 || (a.getRoundTimer() < 60 && a.getRoundTimer() % 15 == 0))
 									{
 										for(Player p : a.getPlayers())
 										{
@@ -254,7 +269,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 								
 								// Debug Message
 								CylinderRegion r = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2),(outer.getWidth()/2)),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
-								if((outer.getWidth()-a.getRound()) >= a.getRegion().getWidth()/5)
+								if((outer.getWidth()-a.getRound()) >= a.getRegion().getWidth()/20 && (outer.getWidth()-a.getRound()) >= 10)
 								{
 									r = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2)-(a.getRound()),(outer.getWidth()/2)-(a.getRound())),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
 									
@@ -279,6 +294,8 @@ public class BattlegroundsPlugin extends JavaPlugin
 								int x, y, z;
 								Block b;
 								Location b_loc;
+								
+								Particle particle = Particle.FLAME;
 								for(Vector2D v : r.getChunks())
 								{
 									c = w.getChunkAt(v.getBlockX(),v.getBlockZ());
@@ -294,10 +311,9 @@ public class BattlegroundsPlugin extends JavaPlugin
 												if(ro.contains(new Vector(b_loc.getX(),b_loc.getY(),b_loc.getZ())) && !ri.contains(new Vector(b_loc.getX(),b_loc.getY(),b_loc.getZ())) && b.getType() == Material.AIR && b.getRelative(BlockFace.DOWN).getType().isSolid())
 												{
 													// Spawn the wall of flames
-													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.00, 0, 5);
-													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.1, 0, 5);
-													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.2, 0, 5);
-													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.3, 0, 5);
+													w.spawnParticle(Particle.LAVA, b_loc, 0, 0, 0.00, 0, 0);
+													for(int i = 0; i < 4; i++)
+														w.spawnParticle(particle, b_loc, 0, 0, 5.00, 0, (4-i));
 												}
 											}
 										}
@@ -319,6 +335,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 										{
 											p.sendMessage(ChatColor.RED + "You have been exposed to poison gas! Return to the play area to recover.");
 											p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,100,2));
+											p.spawnParticle(Particle.CLOUD, p.getLocation(),0,0,5.00,0,0);
 										}
 										
 										// Apply these every second

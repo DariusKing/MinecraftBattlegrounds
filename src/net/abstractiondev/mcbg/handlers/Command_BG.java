@@ -163,6 +163,30 @@ public class Command_BG implements CommandExecutor
 							p.sendMessage(ChatColor.RED + "You do not have permission to manage arenas.");
 						}
 						break;
+					case "LEAVE":
+						Arena aRef = null;
+						for(Arena a : plugin.arenas)
+						{
+							for(Player pl : a.getPlayers())
+							{
+								if(pl.getName().equalsIgnoreCase(p.getName()))
+								{
+									aRef = a;
+								}
+							}
+						}
+						
+						if(aRef != null)
+						{
+							for(Player pl : aRef.getPlayers())
+							{
+								pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.DARK_GRAY + "surrender" + ChatColor.GRAY + ").");
+							}
+							
+							aRef.getPlayers().remove(p);
+						}
+						else p.sendMessage(ChatColor.RED + "You are not in an arena.");
+						break;
 					case "TEST":
 						if(sender.isOp() || BattlegroundsPlugin.permission.has(sender, "bg.arena.manage") || BattlegroundsPlugin.permission.has(sender, "bg.arena.*")|| BattlegroundsPlugin.permission.has(sender, "bg.*"))
 						{

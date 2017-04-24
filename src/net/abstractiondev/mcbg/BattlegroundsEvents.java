@@ -6,6 +6,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import net.abstractiondev.mcbg.data.Arena;
 import net.md_5.bungee.api.ChatColor;
@@ -61,4 +62,32 @@ public class BattlegroundsEvents implements Listener {
 			event.setCancelled(true);
 		}
 	}
+	
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void onPlayerDisconnect(PlayerQuitEvent event)
+	{
+		Player p = event.getPlayer();
+		Arena aRef = null;
+		for(Arena a : plugin.arenas)
+		{
+			for(Player pl : a.getPlayers())
+			{
+				if(pl.getName().equalsIgnoreCase(p.getName()))
+				{
+					aRef = a;
+				}
+			}
+		}
+		
+		if(aRef != null)
+		{
+			aRef.getPlayers().remove(p);
+			
+			for(Player pl : aRef.getPlayers())
+			{
+				pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.DARK_GRAY + "disconnect" + ChatColor.GRAY + ").");
+			}
+		}
+	}
+	
 }
