@@ -19,6 +19,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.Vector;
@@ -107,8 +109,6 @@ public class BattlegroundsPlugin extends JavaPlugin
 						Region outer = null;
 						//Vector centerPoint = null;
 						Vector perfectCenter = null;
-						float amount = 0.00f;
-						
 						for(Arena a : arenas)
 						{
 							// Remove inactive players
@@ -227,35 +227,58 @@ public class BattlegroundsPlugin extends JavaPlugin
 											highest = p.getHealth();
 									}
 								}
+								 
+								// Warnings
+								if(a.getRound() % 2 == 0)
+								{
+									if(a.getRoundTimer() % 30 == 0)
+									{
+										for(Player p : a.getPlayers())
+										{
+											p.sendMessage(ChatColor.GRAY + "The play area is shrinking! Stay inside the circle or you will lose health.");
+										}
+									}
+								}
+								else
+								{
+									if(a.getRoundTimer() % 15 == 0)
+									{
+										for(Player p : a.getPlayers())
+										{
+											p.sendMessage(ChatColor.GRAY + "The play area will begin shrinking in " + a.getRoundTimer() + " seconds.");
+										}
+									}
+								}
 								
 								outer = a.getPlayArea();
 								
 								// Debug Message
 								CylinderRegion r = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2),(outer.getWidth()/2)),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
-								if(outer.getWidth() >= a.getRegion().getWidth()/10)
+								if((outer.getWidth()-a.getRound()) >= a.getRegion().getWidth()/5)
 								{
-									r = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2)-1,(outer.getWidth()/2)-1),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
+									r = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2)-(a.getRound()),(outer.getWidth()/2)-(a.getRound())),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
 									
 									if(a.getRound() % 2 == 0 && a.getRoundTimer() % 5 == 0)
 									{
 										r.getRadius().subtract(new Vector2D(1.00,1.00));
-										Bukkit.broadcastMessage("(" + r.getRadius().getX() + "," + r.getRadius().getZ() + ")"); // Debug for radius calculation
+										//Bukkit.broadcastMessage("(" + r.getRadius().getX() + "," + r.getRadius().getZ() + ")"); // Debug for radius calculation
 										
 										a.setPlayArea(r);
+										outer = r;
 									}
 								}
 								
-								CylinderRegion ri = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2)-2,(outer.getWidth()/2)-2),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
+								CylinderRegion ri = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2)-1,(outer.getWidth()/2)-1),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
+								CylinderRegion ro = new CylinderRegion(perfectCenter,new Vector2D((outer.getWidth()/2)+1,(outer.getWidth()/2)+1),outer.getMinimumPoint().getBlockY(),outer.getMaximumPoint().getBlockY());
 								
-								Block centerBlock = w.getBlockAt(new Location(w,perfectCenter.getBlockX(),perfectCenter.getBlockY(),perfectCenter.getBlockZ()));
-								w.spawnParticle(Particle.DRAGON_BREATH,new Location(w,centerBlock.getX(),centerBlock.getY(),centerBlock.getZ()),3);
+								//Block centerBlock = w.getBlockAt(new Location(w,perfectCenter.getBlockX(),perfectCenter.getBlockY(),perfectCenter.getBlockZ()));
+								//w.spawnParticle(Particle.DRAGON_BREATH,new Location(w,centerBlock.getX(),centerBlock.getY(),centerBlock.getZ()),3);
 								
 								// Draw particle circle
 								Chunk c;
 								int x, y, z;
 								Block b;
 								Location b_loc;
-								int blockCount = 0;
 								for(Vector2D v : r.getChunks())
 								{
 									c = w.getChunkAt(v.getBlockX(),v.getBlockZ());
@@ -268,20 +291,22 @@ public class BattlegroundsPlugin extends JavaPlugin
 											{
 												b = c.getBlock(x, y, z);
 												b_loc = b.getLocation();
-												if(!ri.contains(new Vector(b_loc.getX(),b_loc.getY(),b_loc.getZ())) && b.getType() == Material.AIR && b.getRelative(BlockFace.DOWN).getType().isSolid())
+												if(ro.contains(new Vector(b_loc.getX(),b_loc.getY(),b_loc.getZ())) && !ri.contains(new Vector(b_loc.getX(),b_loc.getY(),b_loc.getZ())) && b.getType() == Material.AIR && b.getRelative(BlockFace.DOWN).getType().isSolid())
 												{
-													blockCount++;
-													w.spawnParticle(Particle.EXPLOSION_HUGE,new Location(w,centerBlock.getX(),centerBlock.getY(),centerBlock.getZ()),3);
+													// Spawn the wall of flames
+													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.00, 0, 5);
+													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.1, 0, 5);
+													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.2, 0, 5);
+													w.spawnParticle(Particle.FLAME, b_loc, 0, 0, 0.3, 0, 5);
 												}
 											}
 										}
 									}
 								}
 								
-								Bukkit.broadcastMessage("Detected " + blockCount + " eligible particle blocks.");
+								//Bukkit.broadcastMessage("Detected " + blockCount + " eligible particle blocks.");
 								
-								// Damage those who are outside of the outer circle
-								amount = 0.25f*a.getRound(); // Amount of damage the player will take (intentionally ignores armor)
+								// Apply the "poison gas" effect to those who are outside of the outer circle
 								for(Player p : a.getPlayers())
 								{
 									Location l = p.getLocation();
@@ -289,11 +314,15 @@ public class BattlegroundsPlugin extends JavaPlugin
 									// Test for the arena play area (soft border)
 									if(!outer.contains(new Vector(l.getX(),l.getY(),l.getZ())))
 									{
+										// Notify the player every 5 seconds
 										if(a.getRoundTimer() % 5 == 0)
 										{
-											p.damage(amount);
-											p.sendMessage(ChatColor.RED + "You have taken " + amount + " damage for being outside the play area.");
+											p.sendMessage(ChatColor.RED + "You have been exposed to poison gas! Return to the play area to recover.");
+											p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,100,2));
 										}
+										
+										// Apply these every second
+										p.damage(0.5*a.getRound());
 									}
 									
 									// Test for the arena border (hard border)
@@ -304,7 +333,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 									}
 								}
 								
-								if(a.getRoundTimer() % 5 == 0) Bukkit.broadcastMessage("Arena: " + a.getFriendlyName() + ", A = " + outer.getArea() + ", " + a.getPlayers().size() + " alive, Round " + a.getRound() + " (" + a.getRoundTimer() + "), W = " + outer.getWidth() + ", R = [" + r.getRadius().getX() + "," + r.getRadius().getZ() + "]");
+								//if(a.getRoundTimer() % 5 == 0) Bukkit.broadcastMessage("Arena: " + a.getFriendlyName() + ", A = " + outer.getArea() + ", " + a.getPlayers().size() + " alive, Round " + a.getRound() + " (" + a.getRoundTimer() + "), W = " + outer.getWidth() + ", R = [" + r.getRadius().getX() + "," + r.getRadius().getZ() + "]");
 							}
 						}
 					}

@@ -9,6 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import com.sk89q.worldedit.bukkit.selections.Selection;
 
@@ -178,8 +179,9 @@ public class Command_BG implements CommandExecutor
 								for(Arena a : plugin.arenas)
 									if(a.getIdentifier().equalsIgnoreCase(identifier))
 									{
-										p.sendMessage(ChatColor.DARK_PURPLE + (a.getRegion().contains(p.getLocation()) ? "You are in the region." : "You are not in the region."));
+										a.setRoundTimer(1);
 										found = true;
+										p.sendMessage(ChatColor.DARK_PURPLE + "Arena set to test mode.");
 									}
 								
 								if(!found)
@@ -277,7 +279,22 @@ public class Command_BG implements CommandExecutor
 								// Join a single match
 								if(sender.isOp() || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.single") || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.*") || BattlegroundsPlugin.permission.has(sender, "bg.arena.*") || BattlegroundsPlugin.permission.has(sender, "bg.*"))
 								{
-									if(p.getInventory().firstEmpty() == 0)
+									//p.sendMessage("" + (p.getInventory().getStorageContents().length));
+									
+									int item_count = 0;
+									for(ItemStack is : p.getInventory().getContents())
+									{
+										try
+										{
+											if(is.getType() != org.bukkit.Material.AIR) item_count++;
+										}
+										catch(Exception e)
+										{
+											continue;
+										}
+									}
+									
+									if(item_count == 0)
 									{
 										p.sendMessage(ChatColor.DARK_PURPLE + "Joining a single match...");
 										
