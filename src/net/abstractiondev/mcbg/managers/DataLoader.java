@@ -42,20 +42,15 @@ public class DataLoader
 	private Arena loadArena(File input) throws ArenaLoadException
 	{ // Decrypt then deserialize
 		try {
-			try {
-				return ((Arena) decrypt(new FileInputStream(input)));
-			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (IOException e) {
+			return ((Arena) decrypt(new FileInputStream(input)));
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException e) {
 			// TODO Auto-generated catch block
-			throw new ArenaLoadException(e);
+			e.printStackTrace();
 		}
 		return null;
 	}
 	
-	private boolean saveArena(Arena arena, File output) throws ArenaSaveException
+	public boolean saveArena(Arena arena, File output) throws ArenaSaveException
 	{ // Serialize then encrypt
 		try
 		{
@@ -70,6 +65,7 @@ public class DataLoader
 		}
 		catch(IOException e)
 		{
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -79,7 +75,16 @@ public class DataLoader
 		File f;
 		for(Arena arena : plugin.arenas)
 		{
-			f = new File(plugin.getDataFolder() + File.separator + "arenas" + File.separator + arena.identifier.toLowerCase() + ".bga");
+			f = new File(plugin.getDataFolder() + File.separator + "arenas" + File.separator + arena.getIdentifier().toLowerCase() + ".bga");
+			
+			if(!f.exists())
+				try {
+					f.createNewFile();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			
 			try {
 				plugin.log.info("[Battlegrounds] Saving arena to file '" + f.getAbsolutePath() + "'.");
 				saveArena(arena, f);
@@ -164,18 +169,19 @@ public class DataLoader
 							}
 							else
 							{
-								plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "'.");
+								plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "' (NNT).");
 							}
 						} catch (ArenaLoadException e) {
 							// TODO Auto-generated catch block
-							plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "'.");
+							plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "' (ANE).");
+							e.printStackTrace();
 						}
 					}
 					
 					plugin.log.info(f.getAbsolutePath());
 				}
 
-				plugin.log.info("[Battlegrounds] Loaded " + files.size() + " arenas from file.");
+				plugin.log.info("[Battlegrounds] Loaded " + plugin.arenas.size() + " arenas from file.");
 				
 				return true;
 			}

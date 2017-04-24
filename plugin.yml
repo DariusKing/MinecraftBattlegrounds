@@ -1,4 +1,9 @@
 name: Battlegrounds
 version: 0.1-DEV
 main: net.abstractiondev.mcbg.BattlegroundsPlugin
-depend: [Vault]
+depend: [Vault, WorldEdit, WorldBorder]
+commands:
+  bg:
+    description: Main command for Battlegrounds Plugin
+    default: true
+    usage: /bg
