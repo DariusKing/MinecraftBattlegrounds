@@ -6,4 +6,5 @@ public class BattlegroundsConfig implements Serializable
 {
 	private static final long serialVersionUID = 5140851676490640667L;
 
+	public boolean showDamageLog = false;
 }

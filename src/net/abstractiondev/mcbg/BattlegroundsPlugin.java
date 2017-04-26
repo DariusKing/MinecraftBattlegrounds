@@ -1,5 +1,7 @@
 package net.abstractiondev.mcbg;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +33,7 @@ import com.sk89q.worldedit.regions.Region;
 
 import net.abstractiondev.mcbg.data.Arena;
 import net.abstractiondev.mcbg.data.BattlegroundsConfig;
+import net.abstractiondev.mcbg.data.BattlegroundsPlayer;
 import net.abstractiondev.mcbg.handlers.Command_BG;
 import net.abstractiondev.mcbg.managers.DataLoader;
 import net.md_5.bungee.api.ChatColor;
@@ -45,7 +48,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 	public Logger log;
 	public DataLoader loader;
 	public ArrayList<Arena> arenas;
-	public BattlegroundsConfig config;
+	public static BattlegroundsConfig config;
 	
 	public static Permission permission = null;
 	public static WorldEditPlugin worldedit;
@@ -54,6 +57,8 @@ public class BattlegroundsPlugin extends JavaPlugin
 	public HashMap<String,Location> creation_selA, creation_selB;
 	public HashMap<String,String> creation_name;
 	public HashMap<String,Boolean> creation_state;
+	
+	public HashMap<String,BattlegroundsPlayer> playerFiles;
 	
 	@Override
 	public void onEnable()
@@ -88,6 +93,8 @@ public class BattlegroundsPlugin extends JavaPlugin
 		creation_name = new HashMap<String,String>();
 		creation_state = new HashMap<String,Boolean>();
 		
+		playerFiles = new HashMap<String,BattlegroundsPlayer>();
+		
 		// Creates the wand
 		creation_wand = new ItemStack(Material.GOLD_SWORD);
 		ItemMeta im = creation_wand.getItemMeta();
@@ -96,6 +103,21 @@ public class BattlegroundsPlugin extends JavaPlugin
 		
 		im.setLore(lore);
 		creation_wand.setItemMeta(im);
+		
+		// Load existing players
+		for(Player pl : this.getServer().getOnlinePlayers())
+		{
+			File f;
+			try
+			{
+				f = new File(this.getDataFolder() + File.separator + "players" + File.separator + pl.getUniqueId().toString() + ".bgp");
+				if(!f.exists()) throw new FileNotFoundException("The requested player file does not exist.");
+			}
+			catch(FileNotFoundException e)
+			{ // create it
+				
+			}
+		}
 		
 		// Schedulers
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable()
@@ -333,7 +355,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 										// Notify the player every 5 seconds
 										if(a.getRoundTimer() % 5 == 0)
 										{
-											p.sendMessage(ChatColor.RED + "You have been exposed to poison gas! Return to the play area to recover.");
+											if(BattlegroundsPlugin.config.showDamageLog) p.sendMessage(ChatColor.RED + "You have been exposed to poison gas! Return to the play area to recover.");
 											p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,100,2));
 											p.spawnParticle(Particle.CLOUD, p.getLocation(),0,0,5.00,0,0);
 										}
@@ -346,7 +368,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 									if(!a.getRegion().contains(l))
 									{
 										p.damage(5.0);
-										p.sendMessage(ChatColor.RED + "You have taken 5.00 damage for being outside of the arena."); // TODO: Remove this and make it an instant death if they are outside of the main play area.
+										if(BattlegroundsPlugin.config.showDamageLog) p.sendMessage(ChatColor.RED + "You have taken 5.00 damage for being outside of the arena."); // TODO: Remove this and make it an instant death if they are outside of the main play area.
 									}
 								}
 								

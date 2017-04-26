@@ -1,14 +1,22 @@
 package net.abstractiondev.mcbg;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import net.abstractiondev.mcbg.data.Arena;
+import net.abstractiondev.mcbg.data.BattlegroundsPlayer;
+import net.abstractiondev.mcbg.data.MatchType;
 import net.md_5.bungee.api.ChatColor;
 
 public class BattlegroundsEvents implements Listener {
@@ -40,6 +48,53 @@ public class BattlegroundsEvents implements Listener {
 			{
 				p.sendMessage(ChatColor.DARK_GRAY + victim.getName() + " has been " + ChatColor.DARK_RED + "eliminated" + ChatColor.DARK_GRAY + " - " + (match.getPlayers().size() <= 10 ? ChatColor.YELLOW : ChatColor.DARK_GRAY) + (match.getPlayers().size()-1) + " remaining.");
 				match.getPlayers().remove(victim);
+			}
+		}
+	}
+	
+	@EventHandler (priority = EventPriority.LOWEST)
+	public void onPlayerDamage(EntityDamageByEntityEvent event)
+	{
+		if(event.getEntity() instanceof Player)
+		{
+			Player victim = (Player) event.getEntity();
+			
+			Player damager = null;
+			if(event.getDamager() instanceof Player)
+			{
+				damager = (Player) event.getDamager();
+			}
+			else if(event.getDamager() instanceof Arrow)
+			{
+				Arrow a = (Arrow) event.getDamager();
+				
+				if(a.getShooter() instanceof Player)
+				{
+					damager = (Player) a.getShooter();
+				}
+			}
+			
+			if(damager != null)
+			{
+				if(BattlegroundsPlugin.config.showDamageLog) victim.sendMessage(ChatColor.DARK_RED + "-" + ((int)event.getFinalDamage()) + " health from " + damager.getName());
+				
+				if(victim.isDead())
+				{
+					// Handle player statistics
+					
+					BattlegroundsPlayer k, v;
+					k = plugin.playerFiles.get(damager.getUniqueId().toString());
+					v = plugin.playerFiles.get(victim.getUniqueId().toString());
+					
+					k.Kills[MatchType.SINGLE]++;
+					v.Deaths[MatchType.SINGLE]++;
+					
+					k.EloTotal[MatchType.SINGLE]+=v.EloTotal[MatchType.SINGLE];
+					v.EloTotal[MatchType.SINGLE]+=k.EloTotal[MatchType.SINGLE];
+					
+					plugin.playerFiles.put(damager.getUniqueId().toString(), k);
+					plugin.playerFiles.put(victim.getUniqueId().toString(), v);
+				}
 			}
 		}
 	}
@@ -87,6 +142,22 @@ public class BattlegroundsEvents implements Listener {
 			{
 				pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.DARK_GRAY + "disconnect" + ChatColor.GRAY + ").");
 			}
+		}
+	}
+	
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void onPlayerJoin(PlayerJoinEvent event)
+	{
+		Player p = event.getPlayer();
+		File f;
+		try
+		{
+			f = new File(plugin.getDataFolder() + File.separator + "players" + File.separator + p.getUniqueId().toString() + ".bgp");
+			if(!f.exists()) throw new FileNotFoundException("The requested player file does not exist.");
+		}
+		catch(FileNotFoundException e)
+		{ // create it
+			
 		}
 	}
 	

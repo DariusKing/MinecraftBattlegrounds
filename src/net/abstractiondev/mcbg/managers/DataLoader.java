@@ -98,7 +98,7 @@ public class DataLoader
 	{
 		try {
 			try {
-				plugin.config = ((BattlegroundsConfig) decrypt(new FileInputStream(new File(plugin.getDataFolder() + File.separator + "config.bgc"))));
+				BattlegroundsPlugin.config = ((BattlegroundsConfig) decrypt(new FileInputStream(new File(plugin.getDataFolder() + File.separator + "config.bgc"))));
 			}
 			catch(FileNotFoundException e)
 			{
@@ -109,7 +109,7 @@ public class DataLoader
 					e1.printStackTrace();
 				}
 				
-				plugin.config = new BattlegroundsConfig();
+				BattlegroundsPlugin.config = new BattlegroundsConfig();
 				
 				saveConfiguration();
 			}
@@ -128,7 +128,7 @@ public class DataLoader
 		try
 		{
 			try {
-				encrypt(plugin.config,new FileOutputStream(new File(plugin.getDataFolder() + File.separator + "config.bgc")));
+				encrypt(BattlegroundsPlugin.config,new FileOutputStream(new File(plugin.getDataFolder() + File.separator + "config.bgc")));
 			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
