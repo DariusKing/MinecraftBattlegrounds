@@ -14,8 +14,8 @@ public class BattlegroundsPlayer implements Serializable
 	public int[] Deaths = {0, 0, 0};
 	
 	public long[] EloTotal = {1000, 1000, 1000};
+	public int[] Wins = {0, 0, 0};
 	public int[] Matches = {0, 0, 0};
-	
 	
 	// TODO: Track favorite weapons used in battle
 	
@@ -26,16 +26,22 @@ public class BattlegroundsPlayer implements Serializable
 		Assists[MatchType.SINGLE] = 0;
 		Deaths[MatchType.SINGLE] = 0;
 		EloTotal[MatchType.SINGLE] = 1000;
+		Wins[MatchType.SINGLE] = 0;
+		Matches[MatchType.SINGLE] = 0;
 		
 		Kills[MatchType.DOUBLES] = 0;
 		Assists[MatchType.DOUBLES] = 0;
 		Deaths[MatchType.DOUBLES] = 0;
 		EloTotal[MatchType.DOUBLES] = 1000;
+		Wins[MatchType.DOUBLES] = 0;
+		Matches[MatchType.DOUBLES] = 0;
 		
 		Kills[MatchType.SQUAD] = 0;
 		Assists[MatchType.SQUAD] = 0;
 		Deaths[MatchType.SQUAD] = 0;
 		EloTotal[MatchType.SQUAD] = 1000;
+		Wins[MatchType.SQUAD] = 0;
+		Matches[MatchType.SQUAD] = 0;
 	}
 }
 

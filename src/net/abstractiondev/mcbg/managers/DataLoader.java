@@ -25,9 +25,12 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bukkit.entity.Player;
+
 import net.abstractiondev.mcbg.BattlegroundsPlugin;
 import net.abstractiondev.mcbg.data.Arena;
 import net.abstractiondev.mcbg.data.BattlegroundsConfig;
+import net.abstractiondev.mcbg.data.BattlegroundsPlayer;
 
 public class DataLoader
 {	
@@ -278,7 +281,36 @@ public class DataLoader
 			return null;
 		}
 	}
-
+	
+	public void savePlayer(Player p)
+	{
+		if(plugin.playerFiles.containsKey(p.getUniqueId().toString()))
+		{
+			BattlegroundsPlayer player = plugin.playerFiles.get(p.getUniqueId().toString());
+			
+			try {
+				encrypt(player,new FileOutputStream(new File(plugin.getDataFolder() + File.separator + "players" + File.separator + p.getUniqueId().toString() + ".bgp")));
+			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	public BattlegroundsPlayer loadPlayer(Player p)
+	{
+		File f;
+		try
+		{
+			f = new File(plugin.getDataFolder() + File.separator + "players" + File.separator + p.getUniqueId().toString() + ".bgp");
+			if(!f.exists()) throw new FileNotFoundException("The requested player file does not exist.");
+			
+			return ((BattlegroundsPlayer) decrypt(new FileInputStream(f)));
+		}
+		catch(InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException e)
+		{ // create it
+			return new BattlegroundsPlayer(p);
+		}
+	}
 	
 	class ArenaLoadException extends IOException
 	{

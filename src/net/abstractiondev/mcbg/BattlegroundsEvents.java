@@ -1,8 +1,5 @@
 package net.abstractiondev.mcbg;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -148,17 +145,7 @@ public class BattlegroundsEvents implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
-		Player p = event.getPlayer();
-		File f;
-		try
-		{
-			f = new File(plugin.getDataFolder() + File.separator + "players" + File.separator + p.getUniqueId().toString() + ".bgp");
-			if(!f.exists()) throw new FileNotFoundException("The requested player file does not exist.");
-		}
-		catch(FileNotFoundException e)
-		{ // create it
-			
-		}
+		plugin.playerFiles.put(event.getPlayer().getUniqueId().toString(), plugin.loader.loadPlayer(event.getPlayer()));
 	}
 	
 }
