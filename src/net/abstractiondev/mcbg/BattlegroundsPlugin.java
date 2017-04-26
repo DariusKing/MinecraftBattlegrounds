@@ -1,15 +1,13 @@
 package net.abstractiondev.mcbg;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,7 +19,6 @@ import net.abstractiondev.mcbg.data.BattlegroundsPlayer;
 import net.abstractiondev.mcbg.handlers.Command_BG;
 import net.abstractiondev.mcbg.handlers.SingleMatchHandler;
 import net.abstractiondev.mcbg.managers.DataLoader;
-import net.md_5.bungee.api.ChatColor;
 import net.milkbowl.vault.permission.Permission;
 
 /*
@@ -31,6 +28,7 @@ import net.milkbowl.vault.permission.Permission;
 public class BattlegroundsPlugin extends JavaPlugin
 {
 	public Logger log;
+	public static Logger slog;
 	public DataLoader loader;
 	public ArrayList<Arena> arenas;
 	public static BattlegroundsConfig config;
@@ -49,6 +47,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 	public void onEnable()
 	{
 		log = Logger.getLogger("Minecraft");
+		slog = log;
 		loader = new DataLoader(this);
 		arenas = new ArrayList<Arena>();
 		
@@ -80,16 +79,12 @@ public class BattlegroundsPlugin extends JavaPlugin
 		
 		playerFiles = new HashMap<String,BattlegroundsPlayer>();
 		
-		// Creates the wand
-		creation_wand = new ItemStack(Material.GOLD_SWORD);
-		ItemMeta im = creation_wand.getItemMeta();
-		im.setDisplayName(ChatColor.DARK_PURPLE + "Battlegrounds Arena Creation Wand");
-		List<String> lore = new ArrayList<String>(); lore.add("Wand for creating arenas for the Battlegrounds plugin.");
-		
-		im.setLore(lore);
-		creation_wand.setItemMeta(im);
-		
 		// Load existing players
+		
+		File f = new File(this.getDataFolder() + File.separator + "players");
+		if(!f.exists())
+			log.severe("[Battlegrounds] " + (f.mkdir() ? "Created" : "Unable to create") + " directory '" + f.getAbsolutePath() + "'.");
+		
 		if(this.getServer().getOnlinePlayers().size() > 0)
 		{
 			log.info("[Battlegrounds] Loading data for currently online players...");
@@ -109,6 +104,11 @@ public class BattlegroundsPlugin extends JavaPlugin
 	public void onDisable()
 	{
 		log.info("Disabling Minecraft Battlegrounds Plugin by JuicyKitten and GrumpyBear.");
+		
+		for(Player p : this.getServer().getOnlinePlayers())
+		{
+			this.loader.savePlayer(p);
+		}
 	}
 	
 	private boolean setupPermissions()

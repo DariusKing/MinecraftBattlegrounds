@@ -11,8 +11,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.Vector;
@@ -22,6 +20,8 @@ import com.sk89q.worldedit.regions.Region;
 
 import net.abstractiondev.mcbg.BattlegroundsPlugin;
 import net.abstractiondev.mcbg.data.Arena;
+import net.abstractiondev.mcbg.data.BattlegroundsPlayer;
+import net.abstractiondev.mcbg.data.MatchType;
 import net.md_5.bungee.api.ChatColor;
 
 public class SingleMatchHandler implements Runnable
@@ -57,7 +57,19 @@ public class SingleMatchHandler implements Runnable
 			// Check match condition
 			if(a.getPlayers().size() == 0) // TODO: Change to more players
 			{
-				for(Player pl : a .getPlayers()) Bukkit.broadcastMessage(ChatColor.DARK_PURPLE + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
+				BattlegroundsPlayer player;
+				for(Player pl : a .getPlayers())
+				{
+					Bukkit.broadcastMessage(ChatColor.DARK_PURPLE + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
+					
+					// Update statistics
+					player = plugin.playerFiles.get(pl.getUniqueId().toString());
+					player.Matches[MatchType.SINGLE]++;
+					player.Wins[MatchType.SINGLE]++;
+					plugin.playerFiles.put(pl.getUniqueId().toString(), player);
+					
+					pl.teleport(pl.getWorld().getSpawnLocation());
+				}
 				
 				a.setActive(false);
 				a.setRound(1);
@@ -191,7 +203,16 @@ public class SingleMatchHandler implements Runnable
 					{
 						for(Player p : a.getPlayers())
 						{
-							p.sendMessage(ChatColor.GRAY + "The play area will begin shrinking in " + a.getRoundTimer() + " seconds.");
+							if(a.getRoundTimer() % 60 == 0)
+							{
+								if((a.getRoundTimer()/60) >= 1) p.sendMessage(ChatColor.GRAY + "The play area will begin shrinking in " + (a.getRoundTimer()/60) + " minutes.");
+								else p.sendMessage(ChatColor.GRAY + "The play area will begin shrinking in " + (a.getRoundTimer()/60) + " minute.");
+							}
+							else
+							{
+								if((a.getRoundTimer()/60) >= 1) p.sendMessage(ChatColor.GRAY + "The play area will begin shrinking in " + (a.getRoundTimer()/60) + " minutes, " + (a.getRoundTimer()%60) + " seconds.");
+								else p.sendMessage(ChatColor.GRAY + "The play area will begin shrinking in " + (a.getRoundTimer()%60) + " seconds.");
+							}
 						}
 					}
 				}
@@ -265,12 +286,12 @@ public class SingleMatchHandler implements Runnable
 						if(a.getRoundTimer() % 5 == 0)
 						{
 							if(BattlegroundsPlugin.config.showDamageLog) p.sendMessage(ChatColor.RED + "You have been exposed to poison gas! Return to the play area to recover.");
-							p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,100,2));
-							p.spawnParticle(Particle.CLOUD, p.getLocation(),0,0,5.00,0,0);
+							//p.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,100,2));
+							//p.spawnParticle(Particle.CLOUD, p.getLocation(),0,0,5.00,0,0);
 						}
 						
 						// Apply these every second
-						p.damage(0.5*a.getRound());
+						p.damage(0.25*a.getRound());
 					}
 					
 					// Test for the arena border (hard border)

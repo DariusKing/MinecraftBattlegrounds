@@ -46,6 +46,11 @@ public class BattlegroundsEvents implements Listener {
 				p.sendMessage(ChatColor.DARK_GRAY + victim.getName() + " has been " + ChatColor.DARK_RED + "eliminated" + ChatColor.DARK_GRAY + " - " + (match.getPlayers().size() <= 10 ? ChatColor.YELLOW : ChatColor.DARK_GRAY) + (match.getPlayers().size()-1) + " remaining.");
 				match.getPlayers().remove(victim);
 			}
+			
+			BattlegroundsPlayer v = plugin.playerFiles.get(victim.getUniqueId().toString());
+			
+			v.Deaths[MatchType.SINGLE]++;
+			v.Matches[MatchType.SINGLE]++;
 		}
 	}
 	
@@ -84,9 +89,8 @@ public class BattlegroundsEvents implements Listener {
 					v = plugin.playerFiles.get(victim.getUniqueId().toString());
 					
 					k.Kills[MatchType.SINGLE]++;
-					v.Deaths[MatchType.SINGLE]++;
-					
 					k.EloTotal[MatchType.SINGLE]+=v.EloTotal[MatchType.SINGLE];
+					
 					v.EloTotal[MatchType.SINGLE]+=k.EloTotal[MatchType.SINGLE];
 					
 					plugin.playerFiles.put(damager.getUniqueId().toString(), k);
@@ -137,9 +141,11 @@ public class BattlegroundsEvents implements Listener {
 			
 			for(Player pl : aRef.getPlayers())
 			{
-				pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.DARK_GRAY + "disconnect" + ChatColor.GRAY + ").");
+				pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.RED + "disconnect" + ChatColor.GRAY + ").");
 			}
 		}
+		
+		plugin.loader.savePlayer(p);
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
