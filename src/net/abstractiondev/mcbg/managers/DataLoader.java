@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.io.StreamCorruptedException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
@@ -172,11 +173,11 @@ public class DataLoader
 							}
 							else
 							{
-								plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "' (NNT).");
+								plugin.log.severe("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "' (NNT).");
 							}
 						} catch (ArenaLoadException e) {
 							// TODO Auto-generated catch block
-							plugin.log.info("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "' (ANE).");
+							plugin.log.severe("[Battlegrounds] Failed to load arena from file '" + f.getAbsolutePath() + "' (ANE).");
 							e.printStackTrace();
 						}
 					}
@@ -261,25 +262,33 @@ public class DataLoader
 
 	public static Object decrypt(InputStream istream) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException
 	{
-	    SecretKeySpec sks = new SecretKeySpec(key, transformation);
-	    Cipher cipher = Cipher.getInstance(transformation);
-	    cipher.init(Cipher.DECRYPT_MODE, sks);
-
-	    CipherInputStream cipherInputStream = new CipherInputStream(istream, cipher);
-	    ObjectInputStream inputStream = new ObjectInputStream(cipherInputStream);
-	    SealedObject sealedObject;
-	    try
-	    {
-	        sealedObject = (SealedObject) inputStream.readObject();
-	        inputStream.close();
-	        return sealedObject.getObject(cipher);
-	    }
-	    catch (ClassNotFoundException | IllegalBlockSizeException | BadPaddingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			inputStream.close();
-			return null;
+		try
+		{
+		    SecretKeySpec sks = new SecretKeySpec(key, transformation);
+		    Cipher cipher = Cipher.getInstance(transformation);
+		    cipher.init(Cipher.DECRYPT_MODE, sks);
+	
+		    CipherInputStream cipherInputStream = new CipherInputStream(istream, cipher);
+		    ObjectInputStream inputStream = new ObjectInputStream(cipherInputStream);
+		    SealedObject sealedObject;
+		    try
+		    {
+		        sealedObject = (SealedObject) inputStream.readObject();
+		        inputStream.close();
+		        return sealedObject.getObject(cipher);
+		    }
+		    catch (ClassNotFoundException | IllegalBlockSizeException | BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				inputStream.close();
+				return null;
+			}
 		}
+		catch(StreamCorruptedException ex)
+		{
+			BattlegroundsPlugin.slog.severe("[Battlegrounds] Unable to decrypt stream (wrong encryption key).");
+		}
+		return null;
 	}
 	
 	public void savePlayer(Player p)
@@ -288,8 +297,13 @@ public class DataLoader
 		{
 			BattlegroundsPlayer player = plugin.playerFiles.get(p.getUniqueId().toString());
 			
+			File f;
 			try {
-				encrypt(player,new FileOutputStream(new File(plugin.getDataFolder() + File.separator + "players" + File.separator + p.getUniqueId().toString() + ".bgp")));
+				
+				f = new File(plugin.getDataFolder() + File.separator + "players" + File.separator + p.getUniqueId().toString() + ".bgp");
+				if(!f.exists()) f.createNewFile();
+				
+				encrypt(player,new FileOutputStream(f));
 			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
