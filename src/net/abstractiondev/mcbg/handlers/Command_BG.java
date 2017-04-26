@@ -1,6 +1,7 @@
 package net.abstractiondev.mcbg.handlers;
 
 import java.io.File;
+import java.text.DecimalFormat;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -15,6 +16,8 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 
 import net.abstractiondev.mcbg.BattlegroundsPlugin;
 import net.abstractiondev.mcbg.data.Arena;
+import net.abstractiondev.mcbg.data.BattlegroundsPlayer;
+import net.abstractiondev.mcbg.data.MatchType;
 import net.md_5.bungee.api.ChatColor;
 
 public class Command_BG implements CommandExecutor
@@ -180,7 +183,7 @@ public class Command_BG implements CommandExecutor
 						{
 							for(Player pl : aRef.getPlayers())
 							{
-								pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.DARK_GRAY + "surrender" + ChatColor.GRAY + ").");
+								pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.RED + "surrender" + ChatColor.GRAY + ").");
 							}
 							
 							aRef.getPlayers().remove(p);
@@ -320,32 +323,49 @@ public class Command_BG implements CommandExecutor
 									
 									if(item_count == 0)
 									{
-										p.sendMessage(ChatColor.DARK_PURPLE + "Joining a single match...");
 										
-										Arena match = null;
-										
-										// Gets the first arena 
+										boolean in_game = false;
 										for(Arena a : plugin.arenas)
 										{
-											if(!a.isActive() && a.getPlayers().size() < 25)
+											for(Player pl : a.getPlayers())
 											{
-												match = a;
-												break;
-											}
-										}
-										
-										if(match != null)
-										{
-											match.getPlayers().add(p);
-											
-											if(match.getPlayers().size() >= 1)
-											{ // When the player count reaches this amount while waiting: Start the match
-												for(Player pl : match.getPlayers())
+												if(pl.getName().equalsIgnoreCase(p.getName()))
 												{
-													pl.sendMessage(ChatColor.DARK_PURPLE + "Match starting...");
+													in_game = true;
 												}
 											}
 										}
+										
+										if(!in_game)
+										{
+											p.sendMessage(ChatColor.DARK_PURPLE + "Joining a single match...");
+											
+											Arena match = null;
+											
+											// Gets the first arena 
+											for(Arena a : plugin.arenas)
+											{
+												if(!a.isActive() && a.getPlayers().size() < 25)
+												{
+													match = a;
+													break;
+												}
+											}
+											
+											if(match != null)
+											{
+												match.getPlayers().add(p);
+												
+												if(match.getPlayers().size() >= 1)
+												{ // When the player count reaches this amount while waiting: Start the match
+													for(Player pl : match.getPlayers())
+													{
+														pl.sendMessage(ChatColor.DARK_PURPLE + "Match starting...");
+													}
+												}
+											}
+										}
+										else p.sendMessage(ChatColor.RED + "You are already in a match.");
 									}
 									else
 									{
@@ -362,6 +382,52 @@ public class Command_BG implements CommandExecutor
 								break;
 							}
 						}
+						break;
+					case "STATS":
+						DecimalFormat df = new DecimalFormat("#.##");
+						
+						int kills = 0, deaths = 0;
+						long total = 0;
+						long elo = 0;
+						
+						if(args.length < 2)
+						{ // Show own stats
+							BattlegroundsPlayer player = plugin.playerFiles.get(p.getUniqueId().toString());
+							
+							kills = player.Kills[MatchType.SINGLE];
+							deaths = player.Deaths[MatchType.SINGLE];
+							total = player.EloTotal[MatchType.SINGLE];
+							
+							elo = (total + (400 * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
+							
+							p.sendMessage(ChatColor.GRAY + "Single Match Statistics:");
+							p.sendMessage(ChatColor.GRAY + "Rating: [" + ((kills+deaths) >= 20 ? elo : "Calculating...") + "]");
+							p.sendMessage(ChatColor.GRAY + "Kills: [" + player.Kills[MatchType.SINGLE] + "] Deaths: [" + player.Deaths[MatchType.SINGLE] + "] K/D Ratio: [" + df.format(((double)player.Kills[MatchType.SINGLE])/((double)(player.Deaths[MatchType.SINGLE]>0?player.Deaths[MatchType.SINGLE]:1))) + "]");
+							p.sendMessage(ChatColor.GRAY + "Wins: [" + player.Wins[MatchType.SINGLE] + "] Matches: [" + player.Matches[MatchType.SINGLE] + "] W/L Ratio: [" + df.format(((double)player.Wins[MatchType.SINGLE])/((double)((player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE])>0?(player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE]):1))) + "]");
+						}
+						else
+						{ // Show other players' stats
+							Player pl = Bukkit.getPlayer(args[1]);
+							
+							if(pl != null && pl.isOnline())
+							{
+								BattlegroundsPlayer player = plugin.playerFiles.get(pl.getUniqueId().toString());
+								
+								kills = player.Kills[MatchType.SINGLE];
+								deaths = player.Deaths[MatchType.SINGLE];
+								total = player.EloTotal[MatchType.SINGLE];
+								
+								elo = (total + (400 * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
+								
+								p.sendMessage(ChatColor.GRAY + "Single Match Statistics for " + pl.getName() + ":");
+								p.sendMessage(ChatColor.GRAY + "Rating: [" + ((kills+deaths) >= 20 ? elo : "Calculating...") + "]");
+								p.sendMessage(ChatColor.GRAY + "Kills: [" + player.Kills[MatchType.SINGLE] + "] Deaths: [" + player.Deaths[MatchType.SINGLE] + "] K/D Ratio: [" + df.format(((double)player.Kills[MatchType.SINGLE])/((double)(player.Deaths[MatchType.SINGLE]>0?player.Deaths[MatchType.SINGLE]:1))) + "]");
+								p.sendMessage(ChatColor.GRAY + "Wins: [" + player.Wins[MatchType.SINGLE] + "] Matches: [" + player.Matches[MatchType.SINGLE] + "] W/L Ratio: [" + df.format(((double)player.Wins[MatchType.SINGLE])/((double)((player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE])>0?(player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE]):1))) + "]");
+							}
+							else p.sendMessage(ChatColor.RED + "Player not found.");
+						}
+						break;
+					case "CONFIG":
 						break;
 					default:
 						p.sendMessage(ChatColor.RED + "Invalid command. Use /bg help for assistance.");
