@@ -11,4 +11,3 @@ addons:
 before_start:
   - mkdir lib/
   - wget -P "lib/" http://urlForYourJar.jar
-  - mvn validate
