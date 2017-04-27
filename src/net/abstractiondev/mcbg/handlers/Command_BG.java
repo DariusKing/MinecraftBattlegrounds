@@ -3,6 +3,7 @@ package net.abstractiondev.mcbg.handlers;
 import java.io.File;
 import java.text.DecimalFormat;
 
+import net.milkbowl.vault.chat.Chat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -450,13 +451,16 @@ public class Command_BG implements CommandExecutor
 					p.sendMessage(ChatColor.DARK_PURPLE + "Battlegrounds Help:");
 					if(sender.isOp() || BattlegroundsPlugin.permission.has(sender, "bg.arena.manage") || BattlegroundsPlugin.permission.has(sender, "bg.arena.*") || BattlegroundsPlugin.permission.has(sender, "bg.*"))
 					{
+						p.sendMessage(ChatColor.DARK_PURPLE + "/bg " + ChatColor.LIGHT_PURPLE + "test [name]" + ChatColor.DARK_PURPLE + " - " + ChatColor.GRAY + "Administrative command to test an arena.");
 						p.sendMessage(ChatColor.DARK_PURPLE + "/bg " + ChatColor.LIGHT_PURPLE + "create [name]" + ChatColor.DARK_PURPLE + " - " + ChatColor.GRAY + "Administrative command to create a new arena.");
 						p.sendMessage(ChatColor.DARK_PURPLE + "/bg " + ChatColor.LIGHT_PURPLE + "delete [name]" + ChatColor.DARK_PURPLE + " - " + ChatColor.GRAY + "Administrative command to delete an existing arena.");
 						++count;
 					}
-					if(sender.isOp() || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.single") || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.*")  || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.*") || BattlegroundsPlugin.permission.has(sender, "bg.arena.*") || BattlegroundsPlugin.permission.has(sender, "bg.*"))
+					if(sender.isOp() || BattlegroundsPlugin.permission.has(sender, "bg.arena.leave.*") || BattlegroundsPlugin.permission.has(sender, "bg.arena.stats.*") || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.single") || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.*")  || BattlegroundsPlugin.permission.has(sender, "bg.arena.join.*") || BattlegroundsPlugin.permission.has(sender, "bg.arena.*") || BattlegroundsPlugin.permission.has(sender, "bg.*"))
 					{
 						p.sendMessage(ChatColor.DARK_PURPLE + "/bg " + ChatColor.LIGHT_PURPLE + "join single" + ChatColor.DARK_PURPLE + " - " + ChatColor.GRAY + "Start matchmaking for a new match.");
+						p.sendMessage(ChatColor.DARK_PURPLE + "/bg " + ChatColor.LIGHT_PURPLE + "leave" + ChatColor.DARK_PURPLE + " - " + ChatColor.GRAY + "Leave current arena.");
+						p.sendMessage(ChatColor.DARK_PURPLE + "/bg " + ChatColor.LIGHT_PURPLE + "stats" + ChatColor.DARK_PURPLE + " - " + ChatColor.GRAY + "See your current stats.");
 						++count;
 					}
 					
