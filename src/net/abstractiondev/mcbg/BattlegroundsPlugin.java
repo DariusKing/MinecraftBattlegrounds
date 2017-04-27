@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+//import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -33,7 +35,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 	public ArrayList<Arena> arenas;
 	public static BattlegroundsConfig config;
 	
-	public static Permission permission = null;
+	public static net.milkbowl.vault.permission.Permission permission = null;
 	public static WorldEditPlugin worldedit;
 	
 	public ItemStack creation_wand;
@@ -93,6 +95,10 @@ public class BattlegroundsPlugin extends JavaPlugin
 				this.playerFiles.put(pl.getUniqueId().toString(),loader.loadPlayer(pl));
 			}
 		}
+
+		f = new File(this.getDataFolder() + File.separator + "arenas");
+		if(!f.exists())
+			log.severe("[Battlegrounds] " + (f.mkdir() ? "Created" : "Unable to create") + " directory '" + f.getAbsolutePath() + "'.");
 		
 		// Schedulers
 		//this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new SingleMatchHandler(this), 0L, 20L);
@@ -113,7 +119,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 	
 	private boolean setupPermissions()
 	{
-		RegisteredServiceProvider<Permission> provider = this.getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
+		RegisteredServiceProvider<net.milkbowl.vault.permission.Permission> provider = this.getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
 		if(provider != null) permission = provider.getProvider();
 		return (permission != null);
 	}
