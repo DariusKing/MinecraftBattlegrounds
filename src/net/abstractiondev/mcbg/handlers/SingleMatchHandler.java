@@ -51,7 +51,7 @@ public class SingleMatchHandler implements Runnable
 					
 					for(Player player : a.getPlayers())
 					{
-						player.sendMessage(ChatColor.DARK_RED + pl.getName() + " has been removed from the arena.");
+						player.sendMessage(ChatColor.DARK_RED + pl.getName() + " has been removed from the arena (disconnect).");
 					}
 				}
 			
@@ -117,7 +117,10 @@ public class SingleMatchHandler implements Runnable
 						z = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (a.getMaxZ()/2)); // get a random +- y
 						y = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)x,(int)z).getY(); // get safe Y for the X Z coordinates
 						
+						p.getInventory().clear();
 						p.teleport(new Location(Bukkit.getWorld(a.getRegion().getWorld().getName()),x,y,z));
+						
+						p.sendMessage(ChatColor.YELLOW + "The match has begun! Go!");
 					}
 				}
 				
