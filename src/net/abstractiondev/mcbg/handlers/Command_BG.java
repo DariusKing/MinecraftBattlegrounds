@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 
 import net.abstractiondev.mcbg.BattlegroundsPlugin;
@@ -338,14 +339,13 @@ public class Command_BG implements CommandExecutor
 										
 										if(!in_game)
 										{
-											p.sendMessage(ChatColor.DARK_PURPLE + "Joining a single match...");
-											
+											p.sendMessage(ChatColor.GRAY + "Joining a single match...");
 											Arena match = null;
 											
 											// Gets the first arena 
 											for(Arena a : plugin.arenas)
 											{
-												if(!a.isActive() && a.getPlayers().size() < 25)
+												if(!a.isActive() && a.getPlayers().size() < BattlegroundsPlugin.config.matchPlayers)
 												{
 													match = a;
 													break;
@@ -354,15 +354,33 @@ public class Command_BG implements CommandExecutor
 											
 											if(match != null)
 											{
-												match.getPlayers().add(p);
+												com.sk89q.worldedit.Vector v = null;
+												try {
+													v = match.getRegion().getRegionSelector().getRegion().getCenter();
+												} catch (IncompleteRegionException e1) {
+													// TODO Auto-generated catch block
+													e1.printStackTrace();
+												}
 												
-												if(match.getPlayers().size() >= 1)
-												{ // When the player count reaches this amount while waiting: Start the match
+												if(v != null)
+												{
+													try {
+														p.teleport(new Location(Bukkit.getWorld(match.getRegion().getRegionSelector().getRegion().getWorld().getName()),v.getX(),v.getY(),v.getZ()));
+													} catch (IncompleteRegionException e) {
+														// TODO Auto-generated catch block
+														e.printStackTrace();
+													}
+													
+													
+													match.getPlayers().add(p);
+													
 													for(Player pl : match.getPlayers())
 													{
-														pl.sendMessage(ChatColor.DARK_PURPLE + "Match starting...");
+														pl.sendMessage(ChatColor.GRAY + p.getName() + " has joined the match.");
+														pl.sendMessage("Joined match in '" + match.getFriendlyName() + "'. The match will begin when " + (match.getPlayers().size() - BattlegroundsPlugin.config.matchPlayers) + " more players have joined!");
 													}
 												}
+												else p.sendMessage(ChatColor.RED + "An error occurred while joining the match.");
 											}
 										}
 										else p.sendMessage(ChatColor.RED + "You are already in a match.");
@@ -401,7 +419,7 @@ public class Command_BG implements CommandExecutor
 							elo = (total + (400 * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
 							
 							p.sendMessage(ChatColor.GRAY + "Single Match Statistics:");
-							p.sendMessage(ChatColor.GRAY + "Rating: [" + ((kills+deaths) >= 20 ? elo : "Calculating...") + "]");
+							p.sendMessage(ChatColor.GRAY + "Rating: [" + elo + "]");
 							p.sendMessage(ChatColor.GRAY + "Kills: [" + player.Kills[MatchType.SINGLE] + "] Deaths: [" + player.Deaths[MatchType.SINGLE] + "] K/D Ratio: [" + df.format(((double)player.Kills[MatchType.SINGLE])/((double)(player.Deaths[MatchType.SINGLE]>0?player.Deaths[MatchType.SINGLE]:1))) + "]");
 							p.sendMessage(ChatColor.GRAY + "Wins: [" + player.Wins[MatchType.SINGLE] + "] Matches: [" + player.Matches[MatchType.SINGLE] + "] W/L Ratio: [" + df.format(((double)player.Wins[MatchType.SINGLE])/((double)((player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE])>0?(player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE]):1))) + "]");
 						}
@@ -420,7 +438,7 @@ public class Command_BG implements CommandExecutor
 								elo = (total + (400 * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
 								
 								p.sendMessage(ChatColor.GRAY + "Single Match Statistics for " + pl.getName() + ":");
-								p.sendMessage(ChatColor.GRAY + "Rating: [" + ((kills+deaths) >= 20 ? elo : "Calculating...") + "]");
+								p.sendMessage(ChatColor.GRAY + "Rating: [" + elo + "]");
 								p.sendMessage(ChatColor.GRAY + "Kills: [" + player.Kills[MatchType.SINGLE] + "] Deaths: [" + player.Deaths[MatchType.SINGLE] + "] K/D Ratio: [" + df.format(((double)player.Kills[MatchType.SINGLE])/((double)(player.Deaths[MatchType.SINGLE]>0?player.Deaths[MatchType.SINGLE]:1))) + "]");
 								p.sendMessage(ChatColor.GRAY + "Wins: [" + player.Wins[MatchType.SINGLE] + "] Matches: [" + player.Matches[MatchType.SINGLE] + "] W/L Ratio: [" + df.format(((double)player.Wins[MatchType.SINGLE])/((double)((player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE])>0?(player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE]):1))) + "]");
 							}
@@ -428,6 +446,95 @@ public class Command_BG implements CommandExecutor
 						}
 						break;
 					case "CONFIG":
+						if(sender.isOp() || BattlegroundsPlugin.permission.has(sender, "bg.arena.config") || BattlegroundsPlugin.permission.has(sender, "bg.arena.*")|| BattlegroundsPlugin.permission.has(sender, "bg.*"))
+						{
+							if(args.length >= 3)
+							{
+								switch(args[1].toUpperCase())
+								{
+								case "SHOWDAMAGELOG":
+									if(args[2].equalsIgnoreCase("YES"))
+									{
+										BattlegroundsPlugin.config.showDamageLog = true;
+										p.sendMessage(ChatColor.GRAY + "Battlegrounds configuration updated. [showdamagelog -> yes]");
+										plugin.loader.saveConfiguration();
+									}
+									else if(args[2].equalsIgnoreCase("NO"))
+									{
+										BattlegroundsPlugin.config.showDamageLog = false;
+										p.sendMessage(ChatColor.GRAY + "Battlegrounds configuration updated. [showdamagelog -> no]");
+										plugin.loader.saveConfiguration();
+									}
+									else
+										p.sendMessage(ChatColor.RED + "The configuration property 'showdamagelog' only accepts a YES or NO argument.");
+									
+									break;
+								case "MATCHPLAYERS":
+									try
+									{
+										int n = Integer.parseInt(args[2]);
+										
+										if(n >= 1 && n <= 100)
+										{
+											BattlegroundsPlugin.config.matchPlayers = n;
+											p.sendMessage(ChatColor.GRAY + "Battlegrounds configuration updated. [matchplayers -> " + n + "]");
+											plugin.loader.saveConfiguration();
+										}
+										else
+										{
+											p.sendMessage(ChatColor.RED + "Value for 'matchplayers' must be between 1 and 100.");
+										}
+									}
+									catch(NumberFormatException e)
+									{
+										p.sendMessage(ChatColor.RED + "The configuration property 'matchplayers' only accepts a NUMERIC argument.");
+									}
+									
+									break;
+								case "MAXROUNDS":
+									try
+									{
+										int n = Integer.parseInt(args[2]);
+										
+										if(n >= 1 && n <= 100)
+										{
+											BattlegroundsPlugin.config.maxRounds = n;
+											p.sendMessage(ChatColor.GRAY + "Battlegrounds configuration updated. [maxrounds -> " + n + "]");
+											plugin.loader.saveConfiguration();
+										}
+										else
+										{
+											p.sendMessage(ChatColor.RED + "Value for 'maxrounds' must be between 1 and 100.");
+										}
+									}
+									catch(NumberFormatException e)
+									{
+										p.sendMessage(ChatColor.RED + "The configuration property 'maxrounds' only accepts a NUMERIC argument.");
+									}
+									
+									break;
+								}
+							}
+							else
+							{
+								if(args.length > 2 && args[1].equalsIgnoreCase("HELP"))
+								{
+									p.sendMessage(ChatColor.GRAY + "Configuration Properties:");
+									p.sendMessage(ChatColor.GRAY + "SHOWDAMAGELOG - (Yes/No)");
+									p.sendMessage(ChatColor.GRAY + "- Controls whether the damage logs should show up in chat.");
+									p.sendMessage(ChatColor.GRAY + "MATCHPLAYERS - (Number)");
+									p.sendMessage(ChatColor.GRAY + "- Controls how many players must be in a match to start (also the max).");
+									p.sendMessage(ChatColor.GRAY + "MAXROUNDS - (Number)");
+									p.sendMessage(ChatColor.GRAY + "- Controls how many rounds before sudden death rounds begin.");
+								}
+								else
+								{
+									p.sendMessage(ChatColor.RED + "Syntax: /bg config [property] [value]");
+									p.sendMessage(ChatColor.RED + "Use '/bg config help' for a listing of properties.");
+								}
+							}
+						}
+						else p.sendMessage(ChatColor.RED + "You do not have permission to configure arenas.");
 						break;
 					default:
 						p.sendMessage(ChatColor.RED + "Invalid command. Use /bg help for assistance.");

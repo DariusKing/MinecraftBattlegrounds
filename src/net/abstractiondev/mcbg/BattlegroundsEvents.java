@@ -6,7 +6,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -119,6 +121,7 @@ public class BattlegroundsEvents implements Listener {
 		}
 	}
 	
+	
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerDisconnect(PlayerQuitEvent event)
 	{
@@ -152,6 +155,29 @@ public class BattlegroundsEvents implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
 		plugin.playerFiles.put(event.getPlayer().getUniqueId().toString(), plugin.loader.loadPlayer(event.getPlayer()));
+	}
+	
+	@EventHandler (priority = EventPriority.HIGHEST)
+	public void onEntityExplosion(EntityExplodeEvent event)
+	{
+		for(Arena a : plugin.arenas)
+		{
+			if(a.isActive() && a.getRegion().contains(event.getLocation()))
+			{
+				event.blockList().clear();
+			}
+		}
+	}
+	@EventHandler (priority = EventPriority.HIGHEST)
+	public void onBlockExplosion(BlockExplodeEvent event)
+	{
+		for(Arena a : plugin.arenas)
+		{
+			if(a.isActive() && a.getRegion().contains(event.getBlock().getLocation()))
+			{
+				event.blockList().clear();
+			}
+		}
 	}
 	
 }
