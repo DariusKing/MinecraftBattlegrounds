@@ -1,5 +1,6 @@
 package net.abstractiondev.mcbg.handlers;
 
+import java.security.SecureRandom;
 import java.util.HashSet;
 
 import org.bukkit.Bukkit;
@@ -50,17 +51,17 @@ public class SingleMatchHandler implements Runnable
 					
 					for(Player player : a.getPlayers())
 					{
-						player.sendMessage(ChatColor.DARK_PURPLE + pl.getName() + " has been removed from the arena.");
+						player.sendMessage(ChatColor.DARK_RED + pl.getName() + " has been removed from the arena (disconnect).");
 					}
 				}
 			
 			// Check match condition
-			if(a.getPlayers().size() == 0) // TODO: Change to more players
+			if(a.getPlayers().size() <= BattlegroundsPlugin.config.winThreshold) // TODO: Change to more players
 			{
 				BattlegroundsPlayer player;
 				for(Player pl : a .getPlayers())
 				{
-					Bukkit.broadcastMessage(ChatColor.DARK_PURPLE + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
+					Bukkit.broadcastMessage(ChatColor.DARK_RED + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
 					
 					// Update statistics
 					player = plugin.playerFiles.get(pl.getUniqueId().toString());
@@ -79,13 +80,15 @@ public class SingleMatchHandler implements Runnable
 			
 			if(!a.isActive())
 			{ // Check if it is time to start the match
-				if(a.getPlayers().size() >= 1)
+				if(a.getPlayers().size() >= BattlegroundsPlugin.config.matchPlayers)
 				{
-					Bukkit.broadcastMessage(ChatColor.DARK_PURPLE + "A new battlegrounds match is starting in arena '" + a.getFriendlyName() + "'!");
+					
+					// Start the match
+					Bukkit.broadcastMessage(ChatColor.DARK_RED + "A new battlegrounds match is starting in arena '" + a.getFriendlyName() + "'!");
 					for(Player pl : a.getPlayers())
 					{
 						for(int i = 0; i <= 50; i++) pl.sendMessage(" "); // Clear chat
-						pl.sendMessage(ChatColor.DARK_PURPLE + "Welcome to Battlegrounds!");
+						pl.sendMessage(ChatColor.DARK_RED + "Welcome to the arena!");
 						pl.sendMessage(ChatColor.GRAY + "Your goal is to " + ChatColor.GRAY + "survive by killing other players in the arena" + ChatColor.GRAY + ".");
 						pl.sendMessage(ChatColor.GRAY + "Collect " + ChatColor.GRAY + "weapons, armor, and power-ups " + ChatColor.GRAY + "found in crates.");
 						pl.sendMessage(ChatColor.GRAY + "The world border shrinks as you play! " + ChatColor.GRAY + "Stay away from the burning ring or you will lose health" + ChatColor.GRAY + ".");
@@ -102,9 +105,22 @@ public class SingleMatchHandler implements Runnable
 					a.setRound(1);
 					a.setRoundTimer(300);
 					
+					// Spawn everybody randomly
+					SecureRandom rand = new SecureRandom();
+					double x, y, z;
+					
 					for(Player p : a.getPlayers())
 					{
 						p.sendMessage(ChatColor.GRAY + "Round " + a.getRound() + " - " + ChatColor.YELLOW + a.getPlayers().size() + " players remaining.");
+						
+						x = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (a.getMaxX()/2)); // get a random +- x
+						z = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (a.getMaxZ()/2)); // get a random +- y
+						y = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)x,(int)z).getY(); // get safe Y for the X Z coordinates
+						
+						p.getInventory().clear();
+						p.teleport(new Location(Bukkit.getWorld(a.getRegion().getWorld().getName()),x,y,z));
+						
+						p.sendMessage(ChatColor.YELLOW + "The match has begun! Go!");
 					}
 				}
 				
@@ -131,11 +147,11 @@ public class SingleMatchHandler implements Runnable
 				if(a.getRoundTimer() <= 0)
 				{
 					// At the end of round 9, notify players of sudden death
-					if(a.getRound() == 9)
+					if(a.getRound() >= (BattlegroundsPlugin.config.maxRounds - 1))
 					{
 						for(Player p : a.getPlayers())
 						{
-							p.sendMessage(ChatColor.DARK_RED + "SUDDEN DEATH! " + ChatColor.GRAY + "The player with the highest health will win at the end of this round.");
+							p.sendMessage(ChatColor.DARK_RED + "SUDDEN DEATH! " + ChatColor.GRAY + "The player with the highest health this round will win.");
 						}
 					}
 					
@@ -171,7 +187,7 @@ public class SingleMatchHandler implements Runnable
 				}
 				
 				// Handle victory condition for sudden death
-				if(a.getRound() >= 10)
+				if(a.getRound() >= BattlegroundsPlugin.config.maxRounds)
 				{ // end of round 10, determine the winner
 					double highest = 0.00;
 					for(Player p : a.getPlayers())
@@ -186,7 +202,7 @@ public class SingleMatchHandler implements Runnable
 					}
 				}
 				 
-				// Warnings
+				// Round Time Warnings
 				if(a.getRound() % 2 == 0)
 				{
 					if(a.getRoundTimer() % 15 == 0)

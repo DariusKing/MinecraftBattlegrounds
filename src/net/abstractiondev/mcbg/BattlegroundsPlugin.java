@@ -87,6 +87,10 @@ public class BattlegroundsPlugin extends JavaPlugin
 		if(!f.exists())
 			log.severe("[Battlegrounds] " + (f.mkdir() ? "Created" : "Unable to create") + " directory '" + f.getAbsolutePath() + "'.");
 		
+		f = new File(this.getDataFolder() + File.separator + "arenas");
+		if(!f.exists())
+			log.severe("[Battlegrounds] " + (f.mkdir() ? "Created" : "Unable to create") + " directory '" + f.getAbsolutePath() + "'.");
+		
 		if(this.getServer().getOnlinePlayers().size() > 0)
 		{
 			log.info("[Battlegrounds] Loading data for currently online players...");
