@@ -416,7 +416,7 @@ public class Command_BG implements CommandExecutor
 							deaths = player.Deaths[MatchType.SINGLE];
 							total = player.EloTotal[MatchType.SINGLE];
 							
-							elo = (total + (400 * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
+							elo = (total + ((400) * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
 							
 							p.sendMessage(ChatColor.GRAY + "Single Match Statistics:");
 							p.sendMessage(ChatColor.GRAY + "Rating: [" + elo + "]");
@@ -435,7 +435,7 @@ public class Command_BG implements CommandExecutor
 								deaths = player.Deaths[MatchType.SINGLE];
 								total = player.EloTotal[MatchType.SINGLE];
 								
-								elo = (total + (400 * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
+								elo = (total + ((400) * (kills - deaths))) / ((kills+deaths) > 0 ? (kills+deaths) : 1);
 								
 								p.sendMessage(ChatColor.GRAY + "Single Match Statistics for " + pl.getName() + ":");
 								p.sendMessage(ChatColor.GRAY + "Rating: [" + elo + "]");
@@ -443,6 +443,12 @@ public class Command_BG implements CommandExecutor
 								p.sendMessage(ChatColor.GRAY + "Wins: [" + player.Wins[MatchType.SINGLE] + "] Matches: [" + player.Matches[MatchType.SINGLE] + "] W/L Ratio: [" + df.format(((double)player.Wins[MatchType.SINGLE])/((double)((player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE])>0?(player.Matches[MatchType.SINGLE]-player.Wins[MatchType.SINGLE]):1))) + "]");
 							}
 							else p.sendMessage(ChatColor.RED + "Player not found.");
+						}
+						break;
+					case "LEADERBOARD":
+						if(sender.isOp() || BattlegroundsPlugin.permission.has(sender, "bg.leaderboard") || BattlegroundsPlugin.permission.has(sender, "bg.*"))
+						{
+							
 						}
 						break;
 					case "CONFIG":
@@ -501,6 +507,9 @@ public class Command_BG implements CommandExecutor
 											BattlegroundsPlugin.config.maxRounds = n;
 											p.sendMessage(ChatColor.GRAY + "Battlegrounds configuration updated. [maxrounds -> " + n + "]");
 											plugin.loader.saveConfiguration();
+											
+											if(n <= 1)
+												p.sendMessage(ChatColor.RED + "Warning: This configuration will cause the play area to never shrink.");
 										}
 										else
 										{
@@ -512,12 +521,40 @@ public class Command_BG implements CommandExecutor
 										p.sendMessage(ChatColor.RED + "The configuration property 'maxrounds' only accepts a NUMERIC argument.");
 									}
 									
+								case "WINTHRESHOLD":
+									try
+									{
+										int n = Integer.parseInt(args[2]);
+										
+										if(n >= 0 && n <= BattlegroundsPlugin.config.matchPlayers)
+										{
+											BattlegroundsPlugin.config.winThreshold = n;
+											p.sendMessage(ChatColor.GRAY + "Battlegrounds configuration updated. [winthreshold -> " + n + "]");
+											plugin.loader.saveConfiguration();
+											
+											if(n == 0)
+												p.sendMessage(ChatColor.RED + "Warning: This configuration will cause the round to continue when there is only 1 player left.");
+										}
+										else
+										{
+											p.sendMessage(ChatColor.RED + "Value for 'winthreshold' must be between 1 and " + BattlegroundsPlugin.config.matchPlayers + ".");
+										}
+									}
+									catch(NumberFormatException e)
+									{
+										p.sendMessage(ChatColor.RED + "The configuration property 'winthreshold' only accepts a NUMERIC argument.");
+									}
+									
+									break;
+								default:
+									p.sendMessage(ChatColor.RED + "Unknown configuration property.");
 									break;
 								}
+								
 							}
 							else
 							{
-								if(args.length > 2 && args[1].equalsIgnoreCase("HELP"))
+								if(args.length >= 2 && args[1].equalsIgnoreCase("HELP"))
 								{
 									p.sendMessage(ChatColor.GRAY + "Configuration Properties:");
 									p.sendMessage(ChatColor.GRAY + "SHOWDAMAGELOG - (Yes/No)");

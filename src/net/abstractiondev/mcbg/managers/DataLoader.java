@@ -297,6 +297,8 @@ public class DataLoader
 		{
 			BattlegroundsPlayer player = plugin.playerFiles.get(p.getUniqueId().toString());
 			
+			player.Name = p.getName();
+			
 			File f;
 			try {
 				
@@ -322,6 +324,7 @@ public class DataLoader
 		}
 		catch(InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException e)
 		{ // create it
+			e.printStackTrace();
 			return new BattlegroundsPlayer(p);
 		}
 	}

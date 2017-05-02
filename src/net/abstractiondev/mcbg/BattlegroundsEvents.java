@@ -154,7 +154,14 @@ public class BattlegroundsEvents implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
-		plugin.playerFiles.put(event.getPlayer().getUniqueId().toString(), plugin.loader.loadPlayer(event.getPlayer()));
+		BattlegroundsPlayer p = plugin.loader.loadPlayer(event.getPlayer());
+		
+		if(p != null)
+		{
+			plugin.playerFiles.put(event.getPlayer().getUniqueId().toString(), p);
+			plugin.log.info("[Battlegrounds] Loaded player '" + event.getPlayer().getName() + "'.");
+		}
+		else plugin.log.warning("[Battlegrounds] Failed to load player '" + event.getPlayer().getName() + "'.");
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)
