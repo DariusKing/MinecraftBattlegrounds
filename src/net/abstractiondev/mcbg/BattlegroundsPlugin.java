@@ -108,7 +108,7 @@ public class BattlegroundsPlugin extends JavaPlugin
 		//this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new SingleMatchHandler(this), 0L, 20L);
 		
 		// This schedules the task asynchronously
-		this.getServer().getScheduler().runTaskTimerAsynchronously(this, new SingleMatchHandler(this), 0L, 20L);
+		this.getServer().getScheduler().runTaskTimer(this, new SingleMatchHandler(this), 0L, 20L);
 	}
 	@Override
 	public void onDisable()
