@@ -86,8 +86,9 @@ public class SingleMatchHandler implements Runnable
 					
 					// Spawn everybody randomly
 					SecureRandom rand = new SecureRandom();
-					double x, y, z;
-					Vector bv = null;
+					double x, z;
+					double rx, rz;
+					
 					Location p_loc;
 					for(Player p : a.getPlayers())
 					{
@@ -97,24 +98,13 @@ public class SingleMatchHandler implements Runnable
 						// Find a location inside the play area
 						do
 						{
-							x = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (2*a.getRegion().getWidth()/3)); // get a random +- x
-							z = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (2*a.getRegion().getWidth()/3)); // get a random +- y
+							rx = (rand.nextInt(2) == 0 ? 1 : -1) * rand.nextDouble() * (2*a.getRegion().getWidth()/3);
+							rz = (rand.nextInt(2) == 0 ? 1 : -1) * rand.nextDouble() * (2*a.getRegion().getWidth()/3);
 							
-							try
-							{
-								bv = a.getRegion().getRegionSelector().getRegion().getCenter().add(x,0.00,z);
-							}
-							catch (IncompleteRegionException e)
-							{
-								e.printStackTrace();
-							}
+							x = a.getPlayArea().getCenter().getX() + rx;
+							z = a.getPlayArea().getCenter().getZ() + rz;
 							
-							x = bv.getX();
-							z = bv.getZ();
-							
-							y = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)x,(int)z).getY(); // get safe Y for the X Z coordinates
-							
-							p_loc = new Location(Bukkit.getWorld(a.getRegion().getWorld().getName()),x,y,z);
+							p_loc = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)x,(int)z).getLocation();
 						} while(!a.getPlayArea().contains(new Vector(p_loc.getX(),p_loc.getY(),p_loc.getZ())));
 						
 						p.teleport(p_loc);

@@ -186,6 +186,7 @@ public class Command_BG implements CommandExecutor
 								pl.sendMessage(ChatColor.GRAY + p.getName() + " has left the arena (" + ChatColor.RED + "surrender" + ChatColor.GRAY + ").");
 							}
 							
+							p.teleport(p.getWorld().getSpawnLocation());
 							aRef.getPlayers().remove(p);
 						}
 						else p.sendMessage(ChatColor.RED + "You are not in an arena.");
