@@ -11,7 +11,6 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 import com.sk89q.worldedit.IncompleteRegionException;
@@ -46,6 +45,7 @@ public class SingleMatchHandler implements Runnable
 		{
 			// Remove inactive players
 			for(Player pl : a.getPlayers())
+			{
 				if(pl != null && !pl.isOnline())
 				{
 					a.getPlayers().remove(pl);
@@ -55,28 +55,6 @@ public class SingleMatchHandler implements Runnable
 						player.sendMessage(ChatColor.DARK_RED + pl.getName() + " has been removed from the arena (disconnect).");
 					}
 				}
-			
-			// Check match condition
-			if(a.getPlayers().size() <= BattlegroundsPlugin.config.winThreshold) // TODO: Change to more players
-			{
-				BattlegroundsPlayer player;
-				for(Player pl : a .getPlayers())
-				{
-					Bukkit.broadcastMessage(ChatColor.DARK_RED + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
-					
-					// Update statistics
-					player = plugin.playerFiles.get(pl.getUniqueId().toString());
-					player.Matches[MatchType.SINGLE]++;
-					player.Wins[MatchType.SINGLE]++;
-					plugin.playerFiles.put(pl.getUniqueId().toString(), player);
-					
-					pl.teleport(pl.getWorld().getSpawnLocation());
-				}
-				
-				a.setActive(false);
-				a.setRound(1);
-				a.setRoundTimer(300);
-				a.setPlayers(new HashSet<Player>());
 			}
 			
 			if(!a.isActive())
@@ -143,43 +121,65 @@ public class SingleMatchHandler implements Runnable
 						p.sendMessage(ChatColor.YELLOW + "The match has begun! Go!");
 					}
 					
-					// Spawn loot into the arena
-					int max_items = rand.nextInt(100) + 100; // 100 - 200 items to spawn
-					
-					plugin.log.info("[Battlegrounds] Spawning " + max_items + " loot items in arena '" + a.getFriendlyName() + "'.");
-					for(int i = 0; i < max_items; i++)
-					{
-						plugin.log.info("[Battlegrounds] Getting location for item #" + i + " in arena '" + a.getFriendlyName() + "'.");
-						// Find a location inside the play area
-						do
-						{
-							x = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (2*a.getRegion().getWidth()/3)); // get a random +- x
-							z = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (2*a.getRegion().getWidth()/3)); // get a random +- y
-							
-							try
-							{
-								bv = a.getRegion().getRegionSelector().getRegion().getCenter().add(x,0.00,z);
-							}
-							catch (IncompleteRegionException e)
-							{
-								e.printStackTrace();
-							}
-							
-							x = bv.getX();
-							z = bv.getZ();
-							
-							y = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)x,(int)z).getY(); // get safe Y for the X Z coordinates
-							
-							p_loc = new Location(Bukkit.getWorld(a.getRegion().getWorld().getName()),x,y,z);
-						} while(!a.getPlayArea().contains(new Vector(p_loc.getX(),p_loc.getY(),p_loc.getZ())));
-						
-						plugin.log.info("[Battlegrounds] Spawning Item #" + i + " in arena '" + a.getFriendlyName() + "'.");
-						Bukkit.getWorld(a.getRegion().getWorld().getName()).spawnEntity(p_loc, EntityType.BOAT);
-					}
-					plugin.log.info("[Battlegrounds] Finished spawning " + max_items + " loot items in arena '" + a.getFriendlyName() + "'");
+//					// Spawn loot into the arena
+//					int max_items = rand.nextInt(100) + 100; // 100 - 200 items to spawn
+//					
+//					plugin.log.info("[Battlegrounds] Spawning " + max_items + " loot items in arena '" + a.getFriendlyName() + "'.");
+//					for(int i = 0; i < max_items; i++)
+//					{
+//						plugin.log.info("[Battlegrounds] Getting location for item #" + i + " in arena '" + a.getFriendlyName() + "'.");
+//						// Find a location inside the play area
+//						do
+//						{
+//							x = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (2*a.getRegion().getWidth()/3)); // get a random +- x
+//							z = (rand.nextInt(2)==0?-1:1) * (rand.nextDouble() * (2*a.getRegion().getWidth()/3)); // get a random +- y
+//							
+//							try
+//							{
+//								bv = a.getRegion().getRegionSelector().getRegion().getCenter().add(x,0.00,z);
+//							}
+//							catch (IncompleteRegionException e)
+//							{
+//								e.printStackTrace();
+//							}
+//							
+//							x = bv.getX();
+//							z = bv.getZ();
+//							
+//							y = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)x,(int)z).getY(); // get safe Y for the X Z coordinates
+//							
+//							p_loc = new Location(Bukkit.getWorld(a.getRegion().getWorld().getName()),x,y,z);
+//						} while(!a.getPlayArea().contains(new Vector(p_loc.getX(),p_loc.getY(),p_loc.getZ())));
+//						
+//						plugin.log.info("[Battlegrounds] Spawning Item #" + i + " in arena '" + a.getFriendlyName() + "'.");
+//						Bukkit.getWorld(a.getRegion().getWorld().getName()).spawnEntity(p_loc, EntityType.BOAT);
+//					}
+//					plugin.log.info("[Battlegrounds] Finished spawning " + max_items + " loot items in arena '" + a.getFriendlyName() + "'");
 				}
 				
 				continue;
+			}
+			
+			if(a.getPlayers().size() <= BattlegroundsPlugin.config.winThreshold) // TODO: Change to more players
+			{
+				BattlegroundsPlayer player;
+				for(Player pl : a .getPlayers())
+				{
+					Bukkit.broadcastMessage(ChatColor.DARK_RED + pl.getName() + " has won a match in arena '" + a.getFriendlyName() + "'!");
+					
+					// Update statistics
+					player = plugin.playerFiles.get(pl.getUniqueId().toString());
+					player.Matches[MatchType.SINGLE]++;
+					player.Wins[MatchType.SINGLE]++;
+					plugin.playerFiles.put(pl.getUniqueId().toString(), player);
+					
+					pl.teleport(pl.getWorld().getSpawnLocation());
+				}
+				
+				a.setActive(false);
+				a.setRound(1);
+				a.setRoundTimer(300);
+				a.setPlayers(new HashSet<Player>());
 			}
 			
 			a.setRoundTimer(a.getRoundTimer()-1);
@@ -318,7 +318,7 @@ public class SingleMatchHandler implements Runnable
 				Block b;
 				Location b_loc;
 				
-				Particle particle = Particle.FLAME;
+				Particle particle = Particle.BARRIER;
 				for(Vector2D v : r.getChunks())
 				{
 					c = w.getChunkAt(v.getBlockX(),v.getBlockZ());

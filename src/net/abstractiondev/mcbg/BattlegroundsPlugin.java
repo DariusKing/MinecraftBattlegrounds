@@ -13,15 +13,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-
 import net.abstractiondev.mcbg.data.Arena;
 import net.abstractiondev.mcbg.data.BattlegroundsConfig;
 import net.abstractiondev.mcbg.data.BattlegroundsPlayer;
 import net.abstractiondev.mcbg.handlers.Command_BG;
 import net.abstractiondev.mcbg.handlers.SingleMatchHandler;
 import net.abstractiondev.mcbg.managers.DataLoader;
-import net.milkbowl.vault.permission.Permission;
 
 /*
  * Battlegrounds Plugin  

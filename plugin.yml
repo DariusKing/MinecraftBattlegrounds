@@ -1,4 +1,5 @@
 name: Battlegrounds
+author: Alex Belluscio
 version: 0.1-DEV
 main: net.abstractiondev.mcbg.BattlegroundsPlugin
 depend: [Vault, WorldEdit, WorldBorder]
