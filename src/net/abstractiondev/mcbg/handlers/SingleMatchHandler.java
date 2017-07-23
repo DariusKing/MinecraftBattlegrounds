@@ -86,8 +86,8 @@ public class SingleMatchHandler implements Runnable
 					
 					// Spawn everybody randomly
 					SecureRandom rand = new SecureRandom();
-					double x, z;
 					double rx, rz;
+					double cx, cz;
 					
 					Location p_loc;
 					for(Player p : a.getPlayers())
@@ -98,14 +98,18 @@ public class SingleMatchHandler implements Runnable
 						// Find a location inside the play area
 						do
 						{
-							rx = (rand.nextInt(2) == 0 ? 1 : -1) * rand.nextDouble() * (2*a.getRegion().getWidth()/3);
-							rz = (rand.nextInt(2) == 0 ? 1 : -1) * rand.nextDouble() * (2*a.getRegion().getWidth()/3);
+							rx = (rand.nextInt(2) == 0 ? 1 : -1) * rand.nextDouble() * (a.getRegion().getWidth());
+							rz = (rand.nextInt(2) == 0 ? 1 : -1) * rand.nextDouble() * (a.getRegion().getWidth());
 							
-							x = a.getPlayArea().getCenter().getX() + rx;
-							z = a.getPlayArea().getCenter().getZ() + rz;
+							cx = a.getPlayArea().getCenter().getX();
+							cz = a.getPlayArea().getCenter().getZ();
 							
-							p_loc = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)x,(int)z).getLocation();
+							p_loc = Bukkit.getWorld(a.getRegion().getWorld().getName()).getHighestBlockAt((int)(cx + rx),(int)(cz + rz)).getLocation();
 						} while(!a.getPlayArea().contains(new Vector(p_loc.getX(),p_loc.getY(),p_loc.getZ())));
+						
+						//plugin.log.info("Offset: (" + rx + ",0.00," + rz + ")");
+						//plugin.log.info("Center Location: (" + cx + ",[Y]," + cz + ")");
+						//plugin.log.info("Spawn Location: (" + p_loc.getBlockX() + "," + p_loc.getBlockY() + "," + p_loc.getBlockZ() + ")");
 						
 						p.teleport(p_loc);
 						p.sendMessage(ChatColor.YELLOW + "The match has begun! Go!");
@@ -308,7 +312,7 @@ public class SingleMatchHandler implements Runnable
 				Block b;
 				Location b_loc;
 				
-				Particle particle = Particle.BARRIER;
+				Particle particle = Particle.FLAME;
 				for(Vector2D v : r.getChunks())
 				{
 					c = w.getChunkAt(v.getBlockX(),v.getBlockZ());
